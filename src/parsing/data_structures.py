@@ -143,7 +143,9 @@ class FlyInData:
 
     @property
     def hubs(self) -> dict[str, HubData]:
-        """dict[str, HubData]: Mapping of hub names to their respective data."""
+        """
+        dict[str, HubData]: Mapping of hub names to their respective data.
+        """
         return self._hubs
 
     @property
@@ -153,7 +155,9 @@ class FlyInData:
 
     @property
     def connections(self) -> set[ConnectionData]:
-        """set[ConnectionData]: Unique set of all established hub connections."""
+        """
+        set[ConnectionData]: Unique set of all established hub connections.
+        """
         return self._connections
 
     def add_hub(self, new_hub: HubData) -> None:

@@ -31,7 +31,8 @@ class DataProcessor(ABC):
 
         Args:
             line (str): The raw string from the map file to be processed.
-            data (FlyInData): The data container to be updated with parsed values.
+            data (FlyInData): The data container to be updated
+                with parsed values.
 
         Raises:
             ValueError: If the line format is invalid for this processor.
