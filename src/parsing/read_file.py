@@ -1,6 +1,11 @@
 from abc import ABC, abstractmethod
 from typing import Any, Optional
-from src.parsing.data_structures import HubData, ConnectionData, FlyInData
+from src.parsing.data_structures import (
+    HubData,
+    ConnectionData,
+    FlyInData,
+    ZoneType,
+)
 import re
 from pydantic import ValidationError
 
@@ -144,10 +149,21 @@ class StartHubProcessor(HubProcessor):
         Args:
             line (str): The hub definition line.
             data (FlyInData): the data registry
+
+        Raises:
+            ValueError: If a start hub has already been defined or if the
+                provided hub is in a blocked zone
         """
+        if data.start:
+            raise ValueError(
+                "duplicate start_hub definition: already set to "
+                f"{data.start!r}"
+            )
         data_dict = self.get_data_dict(line)
         data.add_hub(HubData(**data_dict))
         data.start = data_dict["name"]
+        if data.hubs[data.start].zone == ZoneType.BLOCKED:
+            raise ValueError("start_hub cannot be blocked")
 
 
 class EndHubProcessor(HubProcessor):
@@ -162,10 +178,20 @@ class EndHubProcessor(HubProcessor):
         Args:
             line (str): The hub definition line.
             data (FlyInData): the data registry
+
+        Raises:
+            ValueError: If a end hub has already been defined or if the
+                provided hub is in a blocked zone
         """
+        if data.end:
+            raise ValueError(
+                f"duplicate end_hub definition: already set to {data.end!r}"
+            )
         data_dict = self.get_data_dict(line)
         data.add_hub(HubData(**data_dict))
         data.end = data_dict["name"]
+        if data.hubs[data.end].zone == ZoneType.BLOCKED:
+            raise ValueError("end_hub cannot be blocked")
 
 
 class ConnectionProcessor(DataProcessor):
