@@ -200,6 +200,6 @@ class FlyInData:
         if new_connection in self.connections:
             raise ValueError("Duplicate connection")
         for hub_name in new_connection.hubs:
-            if hub_name not in self.hubs.keys():
+            if hub_name not in self.hubs:
                 raise ValueError(f"Unknown hub {hub_name!r}")
         self._connections.add(new_connection)
