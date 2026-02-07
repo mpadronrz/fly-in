@@ -24,6 +24,7 @@ class Edge:
         self.flow = 0
         self.max_flow = max_flow
         self.reverse_edge: Optional["Edge"] = None
+        self.paths: list["Path"] = []
 
 
 class Path:
@@ -32,7 +33,6 @@ class Path:
         self.cost = cost
         self.priority = priority
         self.nb_drones = 0
-        self.cancelations = cancelations
 
 
 class FlyInAlgorithm:
@@ -86,18 +86,24 @@ class FlyInAlgorithm:
             self.edges[(hub1, hub2)] = edge1
             self.edges[(hub2, hub1)] = edge2
 
-    def is_connectable(self, source, target) -> bool:
+    def is_connectable(self, source: str, target: str, free_node: dict[str, bool]) -> bool:
         if self.edges[(source, target)].flow == self.edges[(source, target)].max_flow:
             return False
         if self.vertices[target].flow < self.vertices[target].max_flow:
+            free_node[target] = True
             return True
-        return self.edges[(target, source)].flow > 0
+        if self.edges[(target, source)].flow > 0:
+            free_node[target] = True
+            return True
+        free_node[target] = False
+        return True
 
     def new_path_to_target(self) -> Optional[Path]:
         parent: dict[str, str] = dict()
         stack = [vertex for vertex in self.vertices]
         distances: dict[str, tuple[int | float, int]] = {vertex: (float('inf'), 0) for vertex in self.vertices}
         distances[self.start] = (0, 0)
+        free_node: dict[str, bool] = {vertex: True for vertex in self.vertices}
 
         while len(stack) > 0:
             current = min(stack, key=lambda x: distances[x])
@@ -106,8 +112,13 @@ class FlyInAlgorithm:
                 break
             current_dist, current_priority = distances[current]
             for neighbour in self.adjacency[current]:
-                edge_length = self.edges[(current, neighbour)].length
-                if distances[neighbour] > current_dist + edge_length and self.is_connectable(current, neighbour):
+                if not free_node[current] and self.edges[(neighbour, current)] == 0:
+                    continue
+                if self.edges[(current, neighbour)].flow < self.edges[(neighbour, current)].flow:
+                    edge_length = - self.edges[(current, neighbour)].length
+                else:
+                    edge_length = self.edges[(current, neighbour)].length
+                if distances[neighbour] > current_dist + edge_length and self.is_connectable(current, neighbour, free_node):
                     parent[neighbour] = current
                     if self.vertices[neighbour].priority:
                         current_priority -= 1
@@ -136,12 +147,8 @@ class FlyInAlgorithm:
                 (sum(path.cost for path in self.paths) + self.nb_drones)
                 / len(self.paths)
             )
-            + 1
+            - 1
         )
-
-    def undo_cancelations(self, new_path: Path) -> None:
-        while new_path.cancelations > 0:
-            pass
 
     def get_candidate_paths(self):
         if (new_path := self.new_path_to_target()) is None:
@@ -151,12 +158,33 @@ class FlyInAlgorithm:
         while len(self.paths) < self.nb_drones:
             if (new_path := self.new_path_to_target()) is None:
                 return
-            if new_path.cost - 2 * new_path.cancelations > self.cost:
+            if new_path.cost > self.cost:
                 return
-            if new_path.cancelations > 0:
-                self.undo_cancelations(new_path)
+            for i in range(len(new_path.vertices) - 1):
+                if self.edges[(new_path.vertices[i + 1], new_path.vertices[i])].flow > 0:
+                    self.edges[(new_path.vertices[i + 1], new_path.vertices[i])].flow -= 1
+                else:
+                    self.edges[(new_path.vertices[i], new_path.vertices[i + 1])].flow += 1
+                    self.vertices[new_path.vertices[i + 1]].flow += 1
             self.paths.append(new_path)
             self.cost = self.calculate_cost()
+
+    def reroute_paths(self) -> list[list[str]]:
+        final_paths: list[list[str]] = []
+        while True:
+            current_vertex = self.start
+            new_path: list[str] = [self.start]
+            while current_vertex != self.end:
+                for neighbour in self.adjacency[current_vertex]:
+                    edge = self.edges[(current_vertex, neighbour)]
+                    if edge.flow > 0:
+                        edge.flow -= 1
+                        current_vertex = neighbour
+                        break
+                else:
+                    return final_paths
+                new_path.append(current_vertex)
+            final_paths.append(new_path)
 
     def route_optimization(self):
         pass
