@@ -108,6 +108,13 @@ class FlyInAlgorithm:
         distances[self.start] = (0, 0)
         free_node: dict[str, bool] = {vertex: True for vertex in self.vertices}
 
+        def is_ancestor(node: str, ancestor: str) -> bool:
+            while node in parent:
+                if node == node:
+                    return True
+                node = parent[node]
+            return False
+
         while len(stack) > 0:
             current = min(stack, key=lambda x: distances[x])
             if distances[current][0] == float('inf'):
@@ -117,6 +124,8 @@ class FlyInAlgorithm:
                 break
             current_dist, current_priority = distances[current]
             for neighbour in self.adjacency[current]:
+                if is_ancestor(neighbour, current):
+                    continue
                 if not free_node[current] and self.edges[(neighbour, current)].flow == 0:
                     continue
                 new_priority = -1 if self.vertices[neighbour].priority else 0
@@ -164,6 +173,8 @@ class FlyInAlgorithm:
         self.register_path(new_path)
         self.cost = new_path.cost + self.nb_drones - 1
         while len(self.paths) < self.nb_drones:
+            print(self.paths[-1].vertices)
+            print(f"Calculating new path {len(self.paths)}")
             if (new_path := self.new_path_to_target()) is None:
                 return
             if new_path.cost > self.cost:
@@ -196,3 +207,9 @@ class FlyInAlgorithm:
 
     def route_optimization(self):
         self.get_candidate_paths()
+        self.paths.sort(key=lambda x: x.priority, reverse=True)
+        drones = self.nb_drones
+        for path in self.paths:
+            path_drones = min(drones, self.cost - path.cost + 1)
+            path.nb_drones = path_drones
+            drones -= path_drones

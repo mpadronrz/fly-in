@@ -1,0 +1,38 @@
+nb_drones: 10
+
+# Hubs
+start_hub: start 0 0 [color=green]
+end_hub: goal 10 0 [color=red]
+
+# The Central Bottleneck
+hub: center 5 0 [color=purple, max_drones=1]
+
+# Upper Wing (The "Short" path that blocks everything)
+hub: up1 3 2 [color=blue, max_drones=1]
+hub: up2 7 2 [color=blue, max_drones=1]
+
+# Lower Wing (The "Long" high-capacity path)
+hub: lo1 2 -3 [color=orange, max_drones=5]
+hub: lo2 4 -3 [color=orange, max_drones=5 zone=restricted]
+hub: lo3 6 -3 [color=orange, max_drones=5]
+hub: lo4 8 -3 [color=orange, max_drones=5]
+
+# The Bridge (Forces the conflict)
+hub: bridge 5 -1 [color=yellow, max_drones=1 zone=priority]
+
+# Connections
+connection: start-up1 [max_link_capacity=1]
+connection: up1-center [max_link_capacity=1]
+connection: center-up2 [max_link_capacity=1]
+connection: up2-goal [max_link_capacity=1]
+
+connection: start-lo1 [max_link_capacity=5]
+connection: lo1-lo2 [max_link_capacity=5]
+connection: lo2-lo3 [max_link_capacity=5]
+connection: lo3-lo4 [max_link_capacity=5]
+connection: lo4-goal [max_link_capacity=5]
+
+# The Switcher Edges
+# If a drone goes start-lo1-bridge-center-up2-goal, it blocks BOTH wings.
+connection: lo1-bridge [max_link_capacity=1]
+connection: bridge-center [max_link_capacity=1]

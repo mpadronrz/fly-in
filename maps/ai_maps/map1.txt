@@ -1,0 +1,48 @@
+nb_drones: 20
+
+# Start and Goal
+start_hub: start 0 0 [color=green]
+end_hub: goal 10 0 [color=red]
+
+# The "Trap" Shortcut
+hub: trap 5 0 [color=purple, max_drones=1 zone=priority]
+
+# Highway A (Upper)
+hub: a1 2 3 [color=blue, max_drones=5]
+hub: a2 5 3 [color=blue, max_drones=5 zone=restricted]
+hub: a3 8 3 [color=blue, max_drones=5]
+
+# Highway B (Lower)
+hub: b1 2 -3 [color=blue, max_drones=5]
+hub: b2 5 -3 [color=blue, max_drones=5 zone=restricted]
+hub: b3 8 -3 [color=blue, max_drones=5]
+
+# Connectors and Distractors
+hub: c1 5 5 [color=yellow, max_drones=2 zone=priority]
+hub: c2 5 -5 [color=yellow, max_drones=2 zone=priority]
+
+# Connections - The Trap
+connection: start-trap [max_link_capacity=1]
+connection: trap-goal [max_link_capacity=1]
+
+# Connections - Highway A
+connection: start-a1 [max_link_capacity=5]
+connection: a1-a2 [max_link_capacity=5]
+connection: a2-a3 [max_link_capacity=5]
+connection: a3-goal [max_link_capacity=5]
+
+# Connections - Highway B
+connection: start-b1 [max_link_capacity=5]
+connection: b1-b2 [max_link_capacity=5]
+connection: b2-b3 [max_link_capacity=5]
+connection: b3-goal [max_link_capacity=5]
+
+# The "Conflict" Edges (Forcing the Undo)
+connection: a1-trap [max_link_capacity=2]
+connection: trap-b3 [max_link_capacity=2]
+
+# Secondary Priority Paths (To test tie-breaking)
+connection: a1-c1 [max_link_capacity=2]
+connection: c1-a3 [max_link_capacity=2]
+connection: b1-c2 [max_link_capacity=2]
+connection: c2-b3 [max_link_capacity=2]
