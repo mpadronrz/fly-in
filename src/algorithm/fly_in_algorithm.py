@@ -5,7 +5,6 @@ from src.parsing.data_structures import (
 from typing import Optional
 from math import ceil
 
-
 class Vertex:
     def __init__(self, name: str, max_flow: int) -> None:
         self.name = name
@@ -28,11 +27,15 @@ class Edge:
 
 
 class Path:
-    def __init__(self, vertices, cost, priority, cancelations):
-        self.vertices: list[Vertex] = vertices
+    def __init__(self, vertices, cost, priority):
+        self.vertices: list[str] = vertices
         self.cost = cost
         self.priority = priority
         self.nb_drones = 0
+
+    def recalculate(self, data: "FlyInAlgorithm"):
+        self.priority = sum (1 if data.vertices[vertex].priority else 0 for vertex in self.vertices)
+        self.cost = sum(data.edges[(self.vertices[i], self.vertices[i + 1])].length for i in range(len(self.vertices) - 1))
 
 
 class FlyInAlgorithm:
@@ -107,37 +110,37 @@ class FlyInAlgorithm:
 
         while len(stack) > 0:
             current = min(stack, key=lambda x: distances[x])
+            if distances[current][0] == float('inf'):
+                return
             stack.remove(current)
             if current == self.end:
                 break
             current_dist, current_priority = distances[current]
             for neighbour in self.adjacency[current]:
-                if not free_node[current] and self.edges[(neighbour, current)] == 0:
+                if not free_node[current] and self.edges[(neighbour, current)].flow == 0:
                     continue
+                new_priority = -1 if self.vertices[neighbour].priority else 0
                 if self.edges[(current, neighbour)].flow < self.edges[(neighbour, current)].flow:
                     edge_length = - self.edges[(current, neighbour)].length
                 else:
                     edge_length = self.edges[(current, neighbour)].length
-                if distances[neighbour] > current_dist + edge_length and self.is_connectable(current, neighbour, free_node):
+                if distances[neighbour] > (current_dist + edge_length, current_priority + new_priority) and self.is_connectable(current, neighbour, free_node):
                     parent[neighbour] = current
-                    if self.vertices[neighbour].priority:
-                        current_priority -= 1
-                    distances[neighbour] = (current_dist + edge_length, current_priority)
+                    distances[neighbour] = (current_dist + edge_length, current_priority + new_priority)
 
         if self.end in stack:
             return
 
         vertices = [self.end]
         current_vertex = self.end
-        cancelations = 0
         while current_vertex != self.start:
             previous_vertex = parent[current_vertex]
             self.vertices[previous_vertex].flow += 1
-            self.edges[(previous_vertex, current_vertex)].flow += 1
-            if self.edges[(current_vertex, previous_vertex)].flow > 0:
-                cancelations += 1
+            if self.edges[(current_vertex, previous_vertex)].flow == 0:
+                self.edges[(previous_vertex, current_vertex)].flow += 1
             vertices.insert(0, previous_vertex)
-        return Path(vertices, distances[self.end][0], -distances[self.end][1], cancelations)
+            current_vertex = previous_vertex
+        return Path(vertices, distances[self.end][0], -distances[self.end][1])
 
     def calculate_cost(self) -> int:
         if not self.paths:
@@ -150,41 +153,46 @@ class FlyInAlgorithm:
             - 1
         )
 
+    def register_path(self, path: Path):
+        for i in range(len(path.vertices) - 1):
+            self.edges[(path.vertices[i], path.vertices[i + 1])].paths.append(path)
+        self.paths.append(path)
+
     def get_candidate_paths(self):
         if (new_path := self.new_path_to_target()) is None:
             return
-        self.paths.append(new_path)
+        self.register_path(new_path)
         self.cost = new_path.cost + self.nb_drones - 1
         while len(self.paths) < self.nb_drones:
             if (new_path := self.new_path_to_target()) is None:
                 return
             if new_path.cost > self.cost:
                 return
-            for i in range(len(new_path.vertices) - 1):
-                if self.edges[(new_path.vertices[i + 1], new_path.vertices[i])].flow > 0:
-                    self.edges[(new_path.vertices[i + 1], new_path.vertices[i])].flow -= 1
-                else:
-                    self.edges[(new_path.vertices[i], new_path.vertices[i + 1])].flow += 1
-                    self.vertices[new_path.vertices[i + 1]].flow += 1
-            self.paths.append(new_path)
+            self.reroute_paths(new_path)
+            self.register_path(new_path)
             self.cost = self.calculate_cost()
 
-    def reroute_paths(self) -> list[list[str]]:
-        final_paths: list[list[str]] = []
-        while True:
-            current_vertex = self.start
-            new_path: list[str] = [self.start]
-            while current_vertex != self.end:
-                for neighbour in self.adjacency[current_vertex]:
-                    edge = self.edges[(current_vertex, neighbour)]
-                    if edge.flow > 0:
-                        edge.flow -= 1
-                        current_vertex = neighbour
-                        break
-                else:
-                    return final_paths
-                new_path.append(current_vertex)
-            final_paths.append(new_path)
+    def reroute_paths(self, path: Path) -> None:
+        i = 0
+        while i < len(path.vertices) - 1:
+            if self.edges[(path.vertices[i + 1], path.vertices[i])].flow > 0:
+                self.edges[(path.vertices[i + 1], path.vertices[i])].flow -= 1
+                self.vertices[path.vertices[i]].flow -= 1
+                self.vertices[path.vertices[i + 1]].flow -= 1
+                old_path = self.edges[(path.vertices[i + 1], path.vertices[i])].paths.pop()
+                new_i = old_path.vertices.index(path.vertices[i + 1])
+                new_path = old_path.vertices[:new_i] + path.vertices[i + 1:]
+                old_path.vertices = path.vertices[:i] + old_path.vertices[new_i + 1:]
+                old_path.recalculate(self)
+                while new_path[new_i - 1] == new_path[new_i + 1] and new_i > 0:
+                    self.vertices[new_path[new_i - 1]].flow -= 1
+                    self.vertices[new_path[new_i]].flow -= 1
+                    new_path = new_path[:new_i - 1] + new_path[new_i + 1:]
+                    new_i -= 1
+                path.vertices = new_path
+                i = new_i
+            i += 1
+        path.recalculate(self)
 
     def route_optimization(self):
-        pass
+        self.get_candidate_paths()

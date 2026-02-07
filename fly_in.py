@@ -1,6 +1,7 @@
 import sys
 from src.parsing.read_file import ReadFile, MapError
 from rich import print as rprint
+from src.algorithm.fly_in_algorithm import FlyInAlgorithm
 
 
 def main() -> None:
@@ -13,6 +14,19 @@ def main() -> None:
     except MapError as e:
         print(e, file=sys.stderr)
         sys.exit(1)
+
+    print()
+    print()
+    print()
+    print("ALGORITHM")
+    print()
+    alg = FlyInAlgorithm()
+    alg.load_data(data)
+    # rprint((vars(alg)))
+
+    alg.route_optimization()
+    for path in alg.paths:
+        rprint(vars(path))
 
 
 if __name__ == "__main__":
