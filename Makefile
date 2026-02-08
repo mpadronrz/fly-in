@@ -49,6 +49,5 @@ clean:
 	@rm -rf .pytest_cache
 	@rm -rf .mypy_cache
 	@rm -rf $(VENV_NAME)
-	@$(MAKE) clean -C $(MLX_DIR)
 
 .PHONY: all run clean lint

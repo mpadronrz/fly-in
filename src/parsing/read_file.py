@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Any, Optional
-from src.parsing.data_structures import (
+from src.models import (
     HubData,
     ConnectionData,
     FlyInData,
