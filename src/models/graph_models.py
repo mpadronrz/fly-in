@@ -1,4 +1,5 @@
 from typing import Optional
+from src.models.drone_model import Drone
 
 
 class Vertex:
@@ -63,3 +64,4 @@ class Path:
         self.cost = cost
         self.priority = priority
         self.nb_drones = 0
+        self.drones: list[Drone] = []

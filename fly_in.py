@@ -1,7 +1,8 @@
 import sys
 from src.parsing.read_file import ReadFile, MapError
-from rich import print as rprint
+# from rich import print as rprint
 from src.algorithm.fly_in_algorithm import FlyInAlgorithm
+from src.simulation.engine import SimulationEngine
 
 
 def main() -> None:
@@ -10,23 +11,31 @@ def main() -> None:
         sys.exit(1)
     try:
         data = ReadFile(sys.argv[1]).get_fly_in_data()
-        rprint((vars(data)))
+        # rprint((vars(data)))
     except MapError as e:
         print(e, file=sys.stderr)
         sys.exit(1)
 
+    """
     print()
     print()
     print()
     print("ALGORITHM")
     print()
+    """
+
     alg = FlyInAlgorithm()
     alg.load_data(data)
     # rprint((vars(alg)))
 
     alg.route_optimization()
+    """
     for path in alg.paths:
-        rprint(vars(path))
+       rprint(vars(path))
+    """
+
+    engine = SimulationEngine(data, alg.paths)
+    engine.run_simulation()
 
 
 if __name__ == "__main__":

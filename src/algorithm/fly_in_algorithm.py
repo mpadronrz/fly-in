@@ -133,7 +133,7 @@ class FlyInAlgorithm:
                 break
             current_dist, current_priority = distances[current]
             for neighbour in self.adjacency[current]:
-                if is_ancestor(neighbour, current):
+                if is_ancestor(current, neighbour):
                     continue
                 if (
                     not free_node[current]
@@ -287,3 +287,4 @@ class FlyInAlgorithm:
             path_drones = min(drones, self.cost - path.cost + 1)
             path.nb_drones = path_drones
             drones -= path_drones
+        self.paths = [path for path in self.paths if path.nb_drones > 0]

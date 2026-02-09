@@ -1,51 +1,9 @@
-nb_drones: 30
+nb_drones: 2
 
 # Start and End
 start_hub: start 0 0 [color=green]
 end_hub: goal 15 0 [color=red]
+hub: a 5 5 [max_drones=2]
 
-# The "Choke Point" (Bottleneck)
-hub: choke 7 0 [color=purple, max_drones=2]
-
-# Priority Bypass (Lower)
-hub: p1 3 -4 [color=yellow, max_drones=5 zone=priority]
-hub: p2 11 -4 [color=yellow, max_drones=5 zone=priority]
-
-# The Restricted Wall (Before the Goal)
-hub: res1 13 2 [color=orange, max_drones=10 zone=restricted]
-hub: res2 13 -2 [color=orange, max_drones=10 zone=restricted]
-
-# High-Capacity Wings
-hub: up1 4 5 [color=blue, max_drones=10]
-hub: up2 7 5 [color=blue, max_drones=10]
-hub: up3 10 5 [color=blue, max_drones=10]
-
-hub: lo1 4 -5 [color=blue, max_drones=10]
-hub: lo2 7 -5 [color=blue, max_drones=10]
-hub: lo3 10 -5 [color=blue, max_drones=10]
-
-# Connections - The Center Trap
-connection: start-choke [max_link_capacity=1]
-connection: choke-goal [max_link_capacity=1]
-
-# Connections - Upper High-Capacity Path
-connection: start-up1 [max_link_capacity=10]
-connection: up1-up2 [max_link_capacity=10]
-connection: up2-up3 [max_link_capacity=10]
-connection: up3-res1 [max_link_capacity=10]
-
-# Connections - Lower High-Capacity Path
-connection: start-lo1 [max_link_capacity=10]
-connection: lo1-lo2 [max_link_capacity=10]
-connection: lo2-lo3 [max_link_capacity=10]
-connection: lo3-res2 [max_link_capacity=10]
-
-# The Priority Connectors (Cross-Flows)
-connection: up1-p1 [max_link_capacity=5]
-connection: p1-choke [max_link_capacity=5]
-connection: choke-p2 [max_link_capacity=5]
-connection: p2-lo3 [max_link_capacity=5]
-
-# Final Entry to Goal
-connection: res1-goal [max_link_capacity=10]
-connection: res2-goal [max_link_capacity=10]
+connection: start-a [max_link_capacity=2]
+connection: goal-a [max_link_capacity=2]

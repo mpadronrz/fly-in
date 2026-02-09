@@ -1,3 +1,4 @@
+from .drone_model import Drone
 from .hub_models import ZoneType, HubData, ConnectionData, FlyInData
 from .graph_models import Vertex, Edge, Path
 
@@ -9,4 +10,5 @@ __all__ = [
     "Vertex",
     "Edge",
     "Path",
+    "Drone"
 ]
