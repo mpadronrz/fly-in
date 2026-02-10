@@ -3,7 +3,8 @@ from src.parsing.read_file import ReadFile, MapError
 # from rich import print as rprint
 from src.algorithm.fly_in_algorithm import FlyInAlgorithm
 from src.simulation.engine import SimulationEngine
-
+from src.gui.graphics_engine import GraphicsEngine
+import time
 
 def main() -> None:
     if len(sys.argv) != 2:
@@ -36,6 +37,10 @@ def main() -> None:
 
     engine = SimulationEngine(data, alg.paths)
     engine.run_simulation()
+
+    graphics = GraphicsEngine(data)
+    graphics.render()
+    time.sleep(10)
 
 
 if __name__ == "__main__":

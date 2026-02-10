@@ -27,6 +27,7 @@ class HubData(BaseModel):
     max_drones: int = Field(ge=1, default=1)
     color: Optional[str] = None
     zone: ZoneType = ZoneType.NORMAL
+    graphic_coords: tuple[int, int] = (0, 0)
 
     @field_validator("name")
     @classmethod
