@@ -38,7 +38,7 @@ def main() -> None:
     engine = SimulationEngine(data, alg.paths)
     engine.run_simulation()
 
-    graphics = GraphicsEngine(data)
+    graphics = GraphicsEngine(data, engine.drones)
     graphics.render()
     time.sleep(10)
 

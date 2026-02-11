@@ -1,6 +1,6 @@
-from typing import Optional
 from enum import Enum
-from pydantic import BaseModel, field_validator, Field
+from pydantic import BaseModel, field_validator, Field, model_validator
+from src.models.color import Color
 
 
 class ZoneType(str, Enum):
@@ -19,13 +19,13 @@ class HubData(BaseModel):
         name (str): Unique identifier for the hub (no dashes/spaces).
         coords (tuple[int, int]): Cartesian coordinates (x, y).
         max_drones (int): Maximum number of drones the hub can hold.
-        color (str): Display color for the hub.
+        color_str (str): Display color for the hub.
         zone (ZoneType): The type of zone.
     """
     name: str
     coords: tuple[int, int]
     max_drones: int = Field(ge=1, default=1)
-    color: Optional[str] = None
+    color: str = "default"
     zone: ZoneType = ZoneType.NORMAL
     graphic_coords: tuple[int, int] = (0, 0)
 
@@ -36,6 +36,17 @@ class HubData(BaseModel):
         if "-" in v or " " in v:
             raise ValueError("Zone names cannot contain dashes or spaces")
         return v
+
+    @model_validator(mode='after')
+    def set_color_data(self) -> 'HubData':
+        """Converts the color string into a Color Enum object after init."""
+        self._color_data = Color.from_str(self.color)
+        return self
+
+    @property
+    def color_data(self) -> Color:
+        """Access the Smart Color object (with .rgb and .ansi)."""
+        return self._color_data
 
 
 class ConnectionData(BaseModel):
