@@ -1,10 +1,12 @@
 from enum import Enum
 from typing import NamedTuple
 
+
 class ColorInfo(NamedTuple):
     """Container for various color representations."""
     rgb: tuple[int, int, int]
     ansi: str
+
 
 class Color(Enum):
     BLACK = ColorInfo((0, 0, 0), "\033[30m")

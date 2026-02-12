@@ -1,14 +1,14 @@
 import os
-os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
-import pygame
 from src.models import FlyInData, Drone
-import math
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide"
+import pygame  # noqa: E402
 
 
-WIDTH = 1920 # 3840
-HEIGHT = 1080 # 2160
+WIDTH = 1920  # 3840
+HEIGHT = 1080  # 2160
 MID_WIDTH = WIDTH / 2
 MID_HEIGHT = HEIGHT / 2
+
 
 class GraphicsEngine:
     def __init__(self, data: FlyInData, drones: list[Drone]) -> None:
@@ -23,13 +23,11 @@ class GraphicsEngine:
         self.drones = drones
         self.load_assets()
 
-
-    def get_hub_size(self):
+    def get_hub_size(self) -> None:
         """
         hubs_raw_data: List of (x, y) tuples from your project data
         padding: pixels to keep away from the screen edge
         """
-        # 1. Find the bounds of the raw data
         raw_x = [h.coords[0] for h in self.data.hubs.values()]
         raw_y = [h.coords[1] for h in self.data.hubs.values()]
 
@@ -37,18 +35,14 @@ class GraphicsEngine:
         min_y, max_y = min(raw_y), max(raw_y)
         mid_x, mid_y = (max_x + min_x) / 2, (max_y + min_y) / 2
 
-
-        # 2. Calculate the "width" and "height" of the data area
         data_width = max_x - min_x + 2
         data_height = max_y - min_y + 2
 
-        # 4. Determine scale (keeping aspect ratio)
         self.scale = min(self.width / data_width, self.height / data_height)
         self.radius = int(self.scale / 4)
         self.connection_width = self.radius // 4
-        # 5. Transform each point
+
         for hub in self.data.hubs.values():
-            # Shift to 0, scale it, then move it to the center of screen
             new_x = MID_WIDTH + (hub.coords[0] - mid_x) * self.scale
             new_y = MID_HEIGHT - (hub.coords[1] - mid_y) * self.scale
             hub.graphic_coords = (int(new_x), int(new_y))
@@ -59,25 +53,87 @@ class GraphicsEngine:
         width = 3 * self.radius
         ratio = drone_original.get_height() / drone_original.get_width()
         height = int(width * ratio)
-        self.drone_img = pygame.transform.scale(drone_original, (width, height))
+        self.drone_img = pygame.transform.scale(
+            drone_original, (width, height)
+        )
         for drone in self.drones:
-            drone.drone_graphics = self.drone_img.get_rect(center=self.data.hubs[self.data.start].graphic_coords)
+            drone.drone_graphics = self.drone_img.get_rect(
+                center=self.data.hubs[self.data.start].graphic_coords
+            )
+            drone.current_coords = self.data.hubs[
+                self.data.start
+            ].graphic_coords
 
-    def render(self):
-        self.screen.fill((20, 20, 25)) # Dark navy background
+    def render(self) -> None:
+        self.screen.fill((20, 20, 25))
 
-        # 1. Draw Connections first (Lines)
-        # Assuming your data has a list of connections (hub_id1, hub_id2)
         for connection in self.data.connections:
             start_id, end_id = connection.hubs
             start_pos = self.data.hubs[start_id].graphic_coords
             end_pos = self.data.hubs[end_id].graphic_coords
-            pygame.draw.line(self.screen, (70, 70, 80), start_pos, end_pos, self.connection_width)
+            pygame.draw.line(
+                self.screen,
+                (70, 70, 80),
+                start_pos,
+                end_pos,
+                self.connection_width,
+            )
 
-        # 2. Draw Hubs (Circles)
         for hub in self.data.hubs.values():
-            pygame.draw.circle(self.screen, hub.color_data.rgb, hub.graphic_coords, self.radius)
+            pygame.draw.circle(
+                self.screen,
+                hub.color_data.rgb,
+                hub.graphic_coords,
+                self.radius,
+            )
+
         for drone in self.drones:
             self.screen.blit(self.drone_img, drone.drone_graphics)
 
         pygame.display.flip()
+
+    def simulate_turn(self, moving_drones: list[Drone]) -> bool:
+        """
+        Smoothly animates all drones in the current turn from
+        current to target coords.
+        """
+        if not moving_drones:
+            return True
+        drone_positions: dict[int, pygame.Vector2] = {
+            d.id: pygame.Vector2(d.current_coords) for d in moving_drones
+        }
+        drone_moving: dict[int, bool] = {
+            d.id: True for d in moving_drones
+        }
+        speed = 600.0
+
+        while any(drone_moving.values()):
+            dt: float = self.clock.tick(60) / 1000.0
+            move_step = speed * dt
+
+            for drone in moving_drones:
+                if not drone_moving[drone.id]:
+                    continue
+                current_pos = drone_positions[drone.id]
+                target_pos = pygame.Vector2(drone.target_coords)
+                distance: float = current_pos.distance_to(target_pos)
+
+                if distance > move_step:
+                    direction = (target_pos - current_pos).normalize()
+                    current_pos += direction * speed * dt
+                    drone.drone_graphics.center = (
+                        int(current_pos.x),
+                        int(current_pos.y),
+                    )
+                    drone_positions[drone.id] = current_pos
+                else:
+                    drone.drone_graphics.center = drone.target_coords
+                    drone.current_coords = drone.target_coords
+                    drone_moving[drone.id] = False
+
+            self.render()
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    return False
+        return True
