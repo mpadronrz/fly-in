@@ -116,14 +116,6 @@ class FlyInAlgorithm:
             vertex: True for vertex in self.vertices
         }
 
-        def is_ancestor(node: str, ancestor: str) -> bool:
-            """Checks if a node is an ancestor in the current search tree."""
-            while node in parent:
-                if node == ancestor:
-                    return True
-                node = parent[node]
-            return False
-
         while len(stack) > 0:
             current = min(stack, key=lambda x: distances[x])
             if distances[current][0] == float('inf'):
@@ -133,21 +125,24 @@ class FlyInAlgorithm:
                 break
             current_dist, current_priority = distances[current]
             for neighbour in self.adjacency[current]:
-                if is_ancestor(current, neighbour):
+                if neighbour not in stack:
                     continue
                 if (
                     not free_node[current]
                     and self.edges[(neighbour, current)].flow == 0
                 ):
                     continue
-                new_priority = -1 if self.vertices[neighbour].priority else 0
                 if (
                     self.edges[(current, neighbour)].flow
                     < self.edges[(neighbour, current)].flow
                 ):
-                    edge_length = - self.edges[(current, neighbour)].length
+                    edge_length = - self.edges[(neighbour, current)].length
+                    new_priority = 0
                 else:
                     edge_length = self.edges[(current, neighbour)].length
+                    new_priority = (
+                        -1 if self.vertices[neighbour].priority else 0
+                    )
                 if distances[neighbour] > (
                     current_dist + edge_length,
                     current_priority + new_priority,
