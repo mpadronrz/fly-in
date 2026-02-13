@@ -11,7 +11,36 @@ MID_HEIGHT = HEIGHT / 2
 
 
 class GraphicsEngine:
+    """
+    Handles the graphical representation and animation of the drone simulation.
+
+    This engine initializes the Pygame environment, scales the map coordinates
+    to fit the screen, manages visual assets, and provides smooth
+    frame-by-frame interpolation for drone movements between hubs.
+
+    Attributes:
+        width (int): The width of the simulation window in pixels.
+        height (int): The height of the simulation window in pixels.
+        screen (pygame.Surface): The main Pygame display surface.
+        clock (pygame.time.Clock): Manages frame rate and delta time.
+        is_running (bool): State flag for the graphical loop.
+        data (FlyInData): Reference to the parsed map and hub data.
+        drones (list[Drone]): List of drones to be rendered.
+        scale (float): The scaling factor to map abstract units to screen
+            pixels.
+        radius (int): Calculated pixel radius for hub rendering.
+        connection_width (int): Pixel width for drawing connection lines.
+        drone_img (pygame.Surface): Scaled and processed drone sprite image.
+    """
     def __init__(self, data: FlyInData, drones: list[Drone]) -> None:
+        """
+        Initializes the Pygame window and prepares visual scaling.
+
+        Args:
+            data (FlyInData): The object containing network and hub
+                information.
+            drones (list[Drone]): The list of drones to be animated.
+        """
         pygame.init()
         self.width = WIDTH
         self.height = HEIGHT
@@ -22,11 +51,16 @@ class GraphicsEngine:
         self.get_hub_size()
         self.drones = drones
         self.load_assets()
+        self.base_speed = 100.0
+        self.speed_multiplier = 5.0
 
     def get_hub_size(self) -> None:
         """
-        hubs_raw_data: List of (x, y) tuples from your project data
-        padding: pixels to keep away from the screen edge
+        Calculates optimal scaling and center-offsets for the map.
+
+        Translates abstract coordinates from the input file into pixel-based
+        screen coordinates, ensuring the entire network is visible and
+        centered within the window dimensions.
         """
         raw_x = [h.coords[0] for h in self.data.hubs.values()]
         raw_y = [h.coords[1] for h in self.data.hubs.values()]
@@ -48,6 +82,12 @@ class GraphicsEngine:
             hub.graphic_coords = (int(new_x), int(new_y))
 
     def load_assets(self) -> None:
+        """
+        Loads and scales graphical assets for the simulation.
+
+        Initializes the drone sprite, applies transparency via colorkey, and
+        sets the initial graphical positions of all drones at the start hub.
+        """
         drone_original = pygame.image.load("assets/drone.png").convert()
         drone_original.set_colorkey(drone_original.get_at((0, 0)))
         width = 3 * self.radius
@@ -65,6 +105,13 @@ class GraphicsEngine:
             ].graphic_coords
 
     def render(self) -> None:
+        """
+        Draws the current frame of the simulation.
+
+        Clears the screen and draws connections, hubs, and drones in their
+        current positions. Hubs are colored according to their parsed
+        metadata.
+        """
         self.screen.fill((20, 20, 25))
 
         for connection in self.data.connections:
@@ -94,8 +141,17 @@ class GraphicsEngine:
 
     def simulate_turn(self, moving_drones: list[Drone]) -> bool:
         """
-        Smoothly animates all drones in the current turn from
-        current to target coords.
+        Smoothly animates all moving drones during a discrete simulation turn.
+
+        Uses vector mathematics to interpolate positions from origin to target.
+        Handles user input events (like quitting) during the animation phase.
+
+        Args:
+            moving_drones (list[Drone]): Drones that have been assigned a
+                movement for the current turn.
+
+        Returns:
+            bool: False if the user closes the window, True otherwise.
         """
         if not moving_drones:
             return True
@@ -105,9 +161,33 @@ class GraphicsEngine:
         drone_moving: dict[int, bool] = {
             d.id: True for d in moving_drones
         }
-        speed = 600.0
+        is_paused = False
+        speed = self.base_speed * self.speed_multiplier
 
         while any(drone_moving.values()):
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    return False
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        pygame.quit()
+                        return False
+                    if event.key == pygame.K_SPACE:
+                        is_paused = not is_paused
+                    if event.key == pygame.K_RIGHT:
+                        self.speed_multiplier += 0.5
+                        speed = self.base_speed * self.speed_multiplier
+                    if event.key == pygame.K_LEFT:
+                        self.speed_multiplier = max(
+                            0.5, self.speed_multiplier - 0.5
+                        )
+                        speed = self.base_speed * self.speed_multiplier
+
+            if is_paused:
+                self.clock.tick(60)
+                continue
+
             dt: float = self.clock.tick(60) / 1000.0
             move_step = speed * dt
 
@@ -132,8 +212,4 @@ class GraphicsEngine:
                     drone_moving[drone.id] = False
 
             self.render()
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    return False
         return True

@@ -9,6 +9,10 @@ except ImportError as e:
 
 
 def main() -> None:
+    """
+    Main program function. Reads the filename from sys.argv and executes
+    the program with said map.
+    """
     if len(sys.argv) != 2:
         print("Error: Missing map file parameter.", file=sys.stderr)
         print("Usage: python3 fly_in.py <map_file.txt>", file=sys.stderr)

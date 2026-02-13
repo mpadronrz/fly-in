@@ -9,6 +9,9 @@ class ColorInfo(NamedTuple):
 
 
 class Color(Enum):
+    """
+    Color class to provide easy access to the rgb and ansi code of the color
+    """
     BLACK = ColorInfo((0, 0, 0), "\033[30m")
     RED = ColorInfo((255, 0, 0), "\033[31m")
     GREEN = ColorInfo((0, 255, 0), "\033[32m")

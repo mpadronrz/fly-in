@@ -3,7 +3,33 @@ from src.gui.graphics_engine import GraphicsEngine
 
 
 class SimulationEngine:
+    """
+    The core engine responsible for executing the drone routing simulation.
+
+    This class manages the lifecycle of the simulation, including drone
+    initialization, path assignment, turn-by-turn state updates, and
+    synchronization with the graphical interface.
+
+    Attributes:
+        data (FlyInData): Parsed map data including hub definitions and
+            constraints.
+        drones (list[Drone]): List of all drone objects active in the fleet.
+        paths (list[Path]): Disjoint or overlapping paths optimized for
+            routing.
+        graphics (GraphicsEngine): The visual representation system for the
+            simulation.
+        graphics_on (bool): Flag to check if graphical output is on.
+    """
     def __init__(self, data: FlyInData, paths: list[Path]) -> None:
+        """
+        Initializes the simulation engine with map data and calculated paths.
+
+        Args:
+            data (FlyInData): The object containing all parsed network
+                information.
+            paths (list[Path]): The calculated optimal paths for the drone
+                fleet.
+        """
         self.data = data
         self.drones = [Drone(i) for i in range(1, data.nb_drones + 1)]
         self.paths = paths
@@ -12,6 +38,12 @@ class SimulationEngine:
         self.graphics_on = True
 
     def add_drones_to_paths(self) -> None:
+        """
+        Distributes the initialized drones across the assigned optimal paths.
+
+        This method partitions the fleet based on the capacity and cost
+        analysis of each path to ensure maximum throughput.
+        """
         drone_index = 0
         for path in self.paths:
             path.drones = self.drones[
@@ -20,6 +52,19 @@ class SimulationEngine:
             drone_index += path.nb_drones
 
     def simulate_turn(self) -> tuple[str, list[Drone]]:
+        """
+        Executes a single discrete simulation turn.
+
+        Processes movement for every drone, handles restricted zone costs
+        (2 turns), updates rendering coordinates, and generates the
+        mandatory log string.
+
+        Returns:
+            tuple[str, list[Drone]]: A tuple containing:
+                - The formatted turn log string to print.
+                - A list of Drone objects that changed position during
+                    this turn.
+        """
         log: list[str] = []
         moving_drones: list[Drone] = []
         for path in self.paths:
@@ -71,6 +116,12 @@ class SimulationEngine:
         return " ".join(log), moving_drones
 
     def run_simulation(self) -> None:
+        """
+        The main simulation loop that executes turns until all drones arrive.
+
+        Outputs the step-by-step movement to the terminal and updates
+        the graphical interface until the simulation end condition is met.
+        """
         while True:
             log, drones = self.simulate_turn()
             if log == "":

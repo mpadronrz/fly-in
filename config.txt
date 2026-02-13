@@ -25,7 +25,6 @@ hub: c5 5 -1
 hub: c6 6 -1
 hub: c7 7 -1
 
-
 connection: start-a1
 connection: start-b1
 connection: start-c1
