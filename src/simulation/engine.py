@@ -82,6 +82,8 @@ class SimulationEngine:
                     )
                     drone.target_coords = hub1.graphic_coords
                     moving_drones.append(drone)
+                    if drone.hub_index + 1 == path_length:
+                        drone.finished = True
                     continue
                 drone.hub_index += 1
                 hub2 = self.data.hubs[path.vertices[drone.hub_index]]
