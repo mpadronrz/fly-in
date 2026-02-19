@@ -1,4 +1,4 @@
-nb_drones: 6
+nb_drones: 20
 
 # Start and End
 start_hub: start 0 0
@@ -26,7 +26,7 @@ hub: c6 6 -1
 hub: c7 7 -1
 
 connection: start-a1
-connection: start-b1
+connection: b1-start
 connection: start-c1
 connection: a1-a2
 connection: a3-a2

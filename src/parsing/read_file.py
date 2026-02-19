@@ -102,7 +102,10 @@ class HubProcessor(DataProcessor):
         )
         match = re.match(hub_pattern, line)
         if match is None:
-            raise ValueError(f"unrecognized pattern {line!r}")
+            raise ValueError(
+                f"unrecognized pattern {line!r}\nExpected '{self.hub_type}: "
+                "<name: str> <x: int> <y: int> [ [metadata] ]'"
+            )
         name, x, y, metadata = match.groups()
         data_dict["name"] = name
         data_dict["coords"] = (x, y)
@@ -127,10 +130,16 @@ class HubProcessor(DataProcessor):
             return
         for piece in metadata.split():
             if "=" not in piece:
-                raise ValueError(f"invalid metadata: [{metadata}]")
+                raise ValueError(
+                    f"invalid metadata: [{metadata}]\n"
+                    "Expected [key=value] or [key1=value1 key2=value2 ...]"
+                )
             key, val = piece.split("=", 1)
             if key not in self.valid_metadata:
-                raise ValueError(f"unknown metadata: {key!r}")
+                raise ValueError(
+                    f"unknown metadata: {key!r}\n"
+                    "Expected 'color', 'zone' or 'max_drones'"
+                )
             if key in seen_metadata:
                 raise ValueError(f"repeated metadata: {key!r}")
             data_dict[key] = val
@@ -226,7 +235,10 @@ class ConnectionProcessor(DataProcessor):
         )
         match = re.match(connection_pattern, line)
         if match is None:
-            raise ValueError(f"unrecognized pattern {line!r}")
+            raise ValueError(
+                f"unrecognized pattern {line!r}\n"
+                "Expected 'connection: <hub1>-<hub2> [ [metadata] ]"
+            )
         hub1, hub2, metadata = match.groups()
         data_dict["hubs"] = (hub1, hub2)
         self.process_metadata(metadata, data_dict)
@@ -248,11 +260,15 @@ class ConnectionProcessor(DataProcessor):
         if metadata is None or not metadata.strip():
             return
         if "=" not in metadata:
-            raise ValueError(f"invalid metadata: [{metadata}]")
+            raise ValueError(
+                f"invalid metadata: [{metadata}]\nExpected [key=value]"
+            )
         metadata = metadata.strip()
         key, val = metadata.split("=", 1)
         if key != "max_link_capacity":
-            raise ValueError(f"unknown metadata: {key!r}")
+            raise ValueError(
+                f"unknown metadata: {key!r}.\nExpected 'max_link_capacity'"
+            )
         data_dict[key] = val
 
 
@@ -363,7 +379,9 @@ class ReadFile:
 
         except KeyError:
             raise MapError(
-                f"unable to process data: {line!r}",
+                f"unknown command: {line.split(':', 1)[0]!r}\n"
+                "Expected 'hub: <data>', 'start_hub: <data>', "
+                "'end_hub: <data>' or 'connection: <data>'",
                 f"{self.filename}, line {line_num + 1}",
             )
 
