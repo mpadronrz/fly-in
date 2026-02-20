@@ -1,29 +1,29 @@
-nb_drones: 20
+nb_drones: 12
 
 # Start and End
-start_hub: start 0 0
-end_hub: goal 8 0
-hub: a1 1 1
-hub: a2 2 1
-hub: a3 3 1
-hub: a4 4 1
-hub: a5 5 1
-hub: a6 6 1
-hub: a7 7 1
-hub: b1 1 0
-hub: b2 2 0
-hub: b3 3 0
-hub: b4 4 0
-hub: b5 5 0
-hub: b6 6 0
-hub: b7 7 0
-hub: c1 1 -1
-hub: c2 2 -1
-hub: c3 3 -1
-hub: c4 4 -1
-hub: c5 5 -1
-hub: c6 6 -1
-hub: c7 7 -1
+start_hub: start 0 0 [color=green]
+end_hub: goal 8 0 [color=green]
+hub: a1 1 1 [color=blue]
+hub: a2 2 1 [color=yellow]
+hub: a3 3 1 [color=yellow]
+hub: a4 4 1 [color=yellow]
+hub: a5 5 1 [color=yellow]
+hub: a6 6 1 [color=yellow]
+hub: a7 7 1 [color=yellow]
+hub: b1 1 0 [color=purple]
+hub: b2 2 0 [color=purple]
+hub: b3 3 0 [color=purple]
+hub: b4 4 0 [color=blue]
+hub: b5 5 0 [color=purple]
+hub: b6 6 0 [color=purple]
+hub: b7 7 0 [color=purple]
+hub: c1 1 -1 [color=red]
+hub: c2 2 -1 [color=red]
+hub: c3 3 -1 [color=red]
+hub: c4 4 -1 [color=red]
+hub: c5 5 -1 [color=red]
+hub: c6 6 -1 [color=red]
+hub: c7 7 -1 [color=blue]
 
 connection: start-a1
 connection: b1-start
