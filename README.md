@@ -19,7 +19,7 @@
 
 ## 📖 About the Project <a id="about-the-project"></a>
 
-**Fly-in** is a high-performance fleet management and pathfinding system developed as part of the 42 curriculum. It solves the complex problem of routing a fleet of up to 30 drones through a constrained graph network—balancing path length against network throughput to minimize total mission time.
+**Fly-in** is a high-performance fleet management and pathfinding system developed as part of the 42 curriculum. It solves the complex problem of routing a fleet of through a constrained graph network balancing path length against network throughput to minimize total mission time.
 
 The core of the project is an optimization challenge: navigating drones from a starting hub to a target hub in the fewest possible turns. Unlike simple shortest-path problems, **Fly-in** introduces capacity constraints on both nodes and edges, requiring a solution that can manage "traffic jams" by dispatching drones across multiple parallel paths simultaneously.
 
